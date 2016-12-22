@@ -1,19 +1,50 @@
 var express = require('express');
 var path = require('path');
+var app = express();
 
 var webpackDevMiddleware = require("webpack-dev-middleware");
 var webpack = require("webpack");
 var webpackConfig = require("../webpack.config");
 var webpackHotMiddleware = require('webpack-hot-middleware');
-var app = express();
 var compiler = webpack(webpackConfig);
+
 var passport=require('passport');
 var LocalStrategy =require('passport-local').Strategy;
 var connectflash=require('connect-flash');
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(connectflash());
 
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+
+
+var logincrud=require('./routes/logincrud');
+var news=require('./routes/newscrud')
+var Users=require('./models/users.js');
+
+passport.serializeUser(function(user, done) {
+console.log("Serial");
+done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+console.log("Deserial");
+Users.findById(id, function (err, user) {
+console.log("Deserial "+user);
+  done(err, user);
+});
+});
+
+passport.use(new LocalStrategy(
+function(username, password, done) {
+  Users.findOne({ username: username ,password:password}, function (err, user) {
+    if (err) { return done(err); }
+    if (!user) { return done(null, false); }
+  //  if (!users.verifyPassword(password)) { return done(null, false); }
+    return done(null, user);
+  });
+}
+));
 
 
 app.use(webpackDevMiddleware(compiler, {
@@ -32,16 +63,7 @@ app.use(webpackHotMiddleware(compiler, {
    log: console.log,
 }))
 
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var index = require('./routes/index');
-var users = require('./routes/users');
-var login=require('./routes/login');
-var logincrud=require('./routes/logincrud');
-var news=require('./routes/newscrud')
-var users=require('./models/users.js');
+
 
 
 
@@ -65,40 +87,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, './client/assets')));
+app.use(require('express-session')({ secret: 'accesskey'}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(connectflash());
 
-app.use('/', index);
-app.use('/users', users);
-app.use('/',login);
+
 app.use('/login',logincrud);
 app.use('/news',news);
-
-
-
-
-passport.serializeUser(function(user, done) {
-done(null, user.id);
-});
-
-passport.deserializeUser(function(id, done) {
-users.findById(id, function (err, user) {
-  done(err, user);
-});
-});
-
-
-passport.use(new LocalStrategy(
-function(username, password, done) {
-  users.findOne({ username: username ,password:password}, function (err, user) {
-    if (err) { return done(err); }
-    if (!user) { return done(null, false); }
-  //  if (!users.verifyPassword(password)) { return done(null, false); }
-    return done(null, user);
-  });
-}
-));
-
-
-
 
 
 // catch 404 and forward to error handler

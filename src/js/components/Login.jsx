@@ -1,6 +1,6 @@
 
 import React from 'react';
-import Homecomponent from './Homecomponent'
+import {browserHistory} from 'react-router';
 
 
 export default class Register extends React.Component
@@ -19,7 +19,9 @@ var pass=document.getElementById('password').value;
     success : function(msg)
     {
     console.log("successfully loged to database");
-      alert("succesfully loggedin");
+
+      
+      browserHistory.push('/home');
     }.bind(this),
     error: function(err){
       alert("check the username and password");

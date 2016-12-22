@@ -27,7 +27,7 @@ return (
 }
 }
 ReactDOM.render(
-<Router history={hashHistory}>
+<Router history={browserHistory}>
               <Route path="/" component={MainComponent} >
               <IndexRoute component={Homecomponent}/>
             <Route path="/home" component={Homecomponent}/>
